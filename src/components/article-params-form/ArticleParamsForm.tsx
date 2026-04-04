@@ -5,6 +5,7 @@ import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
+import { Separator } from 'src/ui/separator';
 import {
 	fontFamilyOptions,
 	fontColors,
@@ -12,7 +13,9 @@ import {
 	contentWidthArr,
 	fontSizeOptions,
 	ArticleStateType,
+	defaultArticleState,
 } from 'src/constants/articleProps';
+import { useOutsideClickClose } from './hooks/useOutsideClickClose';
 
 import styles from './ArticleParamsForm.module.scss';
 
@@ -27,36 +30,21 @@ export const ArticleParamsForm = ({
 }: ArticleParamsFormProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [formState, setFormState] = useState<ArticleStateType>(articleState);
-	const [savedState, setSavedState] = useState<ArticleStateType>(articleState);
 	const asideRef = useRef<HTMLDivElement>(null);
 
-	// храним состояние сайдбара
+	// Обновляем formState при открытии панели
 	useEffect(() => {
 		if (isOpen) {
 			setFormState(articleState);
-			setSavedState(articleState);
 		}
 	}, [isOpen, articleState]);
 
-	// закрытие при клике вне сайдбара
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				asideRef.current &&
-				!asideRef.current.contains(event.target as Node)
-			) {
-				setIsOpen(false);
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isOpen]);
+	// Закрытие панели при клике вне её
+	useOutsideClickClose({
+		isOpen,
+		onClose: () => setIsOpen(false),
+		rootRef: asideRef,
+	});
 
 	const handleArrowClick = () => {
 		setIsOpen(!isOpen);
@@ -80,8 +68,8 @@ export const ArticleParamsForm = ({
 
 	const handleReset = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setFormState(savedState);
-		setArticleState(savedState);
+		setFormState(defaultArticleState);
+		setArticleState(defaultArticleState);
 		setIsOpen(false);
 	};
 
@@ -116,6 +104,8 @@ export const ArticleParamsForm = ({
 						options={fontColors}
 						onChange={(option) => handleFormChange('fontColor', option)}
 					/>
+
+					<Separator />
 
 					<Select
 						title='Цвет фона'
